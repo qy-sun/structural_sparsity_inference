@@ -227,7 +227,7 @@ m <- nrow(D)
 D_info <- precompute_D(D)
 r <- D_info$r
 
-alpha_grid <- 10^seq(-1, 4, length.out = 26)
+alpha_grid <- sort(unique(c(0.5, 10^seq(-1, 4, length.out = 26))))
 nlam       <- 40
 rho_grid   <- 10^seq(0, -3, length.out = nlam)
 

@@ -144,7 +144,7 @@ summarize_results <- function(result) {
 ## Table S.2: selection behavior under different penalty choices
 n <- 300L
 p <- 150L
-A <- 1
+A <- 4
 sigma <- 1
 nIterations <- 100L
 n_signal <- 5L
