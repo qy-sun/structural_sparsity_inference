@@ -8,14 +8,12 @@
 #   Sequential Lasso cum EBIC for feature selection with ultra-high dimensional
 #   feature space. Journal of the American Statistical Association, 109(507), 1229-1240.
 ################################################################################
-
 ################################################################################
 ################################################################################
 ################################################################################
 ################################################################################
 ################################################################################
 ################################################################################
-## SATLasso
 SATLasso <- function(X,y,D, alpha_grid = 10^seq(-1, 1, length.out = 10),
                      stop = NULL, signal_ind = NULL, eta0 = 2.1, gbic = TRUE){
   n <- nrow(X)
@@ -99,14 +97,8 @@ SATLasso <- function(X,y,D, alpha_grid = 10^seq(-1, 1, length.out = 10),
 ################################################################################
 ################################################################################
 ################################################################################
-################################################################################
-################################################################################
-################################################################################
-## Helper functions
-################################################################################
-################################################################################
-################################################################################
-### (1) STLasso
+### Helper functions
+## (1) STLasso
 STLasso <- function(X,y,D, X_N_option = 1, proj = TRUE, stop = NULL, signal_ind = NULL, eta0 = 2.1, gbic = TRUE){
   y <- matrix(y, ncol = 1)
   n <- dim(X)[1]
@@ -175,8 +167,8 @@ STLasso <- function(X,y,D, X_N_option = 1, proj = TRUE, stop = NULL, signal_ind 
 ################################################################################
 ################################################################################
 ################################################################################
-### (2) SATLasso_alpha (fix alpha)
-SATLasso_alpha <- function(X,y,D, alpha = 0.1, stop = NULL, signal_ind = NULL, eta0 = 2.1, gbic = TRUE){
+## (2) SATLasso_alpha (fix alpha)
+SATLasso_alpha <- function(X,y,D, alpha = 0.5, stop = NULL, signal_ind = NULL, eta0 = 2.1, gbic = TRUE){
   y <- matrix(y, ncol = 1)
   n <- dim(X)[1]
   p <- dim(X)[2]
@@ -233,7 +225,7 @@ SATLasso_alpha <- function(X,y,D, alpha = 0.1, stop = NULL, signal_ind = NULL, e
 ################################################################################
 ################################################################################
 ################################################################################
-### (3) SLasso (Luo & Chen, 2014)
+## (3) SLasso (Luo & Chen, 2014)
 SLasso <- function(X,y, stop = NULL, callback = NULL, n_eff = NULL, eta0 = 2.1, gbic = TRUE, tol = 1e-10){
   X <- as.matrix(X)
   y <- as.numeric(y)
@@ -249,7 +241,7 @@ SLasso <- function(X,y, stop = NULL, callback = NULL, n_eff = NULL, eta0 = 2.1, 
     stop("SLasso tol must be in [0, 1)")
   K_max <- min(K_max, p)
   
-  # Initial model
+  ## Initial model
   Xcheck <- X
   Ycheck <- y
   original_norm <- sqrt(colSums(X^2))
@@ -260,13 +252,13 @@ SLasso <- function(X,y, stop = NULL, callback = NULL, n_eff = NULL, eta0 = 2.1, 
 
   k <- 0L
   for (i in seq_len(K_max)){
-    # Sequential Select
+    ## Sequential Select
     sel <- sequential_select(Xcheck, Ycheck, active, original_norm, tol = tol)
     if (is.null(sel)) break
     index.m <- sel$index.m
     active <- sel$active
 
-    # Update Projector
+    ## Update Projector
     u <- Xcheck[, index.m, drop = FALSE] / sel$col_norm
     Xcheck <- Xcheck - u %*% crossprod(u, Xcheck)
     Ycheck <- as.numeric(Ycheck - u %*% crossprod(u, Ycheck))
@@ -277,7 +269,7 @@ SLasso <- function(X,y, stop = NULL, callback = NULL, n_eff = NULL, eta0 = 2.1, 
     path[k] <- index.m
     RSS[k] <- next_rss
 
-    # Early Stop
+    ## Early Stop
     if (!is.null(callback) && callback(path[seq_len(k)])) break
   }
 
@@ -324,7 +316,12 @@ sequential_select <- function(X, y, active, original_norm, tol = 1e-10){
 ################################################################################
 ################################################################################
 ################################################################################
-### (4) refit_gbic: GBIC of the constrained least squares refit on the original scale
+## (4) refit_gbic: GBIC of the constrained least squares refit on the original scale
+##
+## The augmented residual equals the data fit plus alpha*||t(N)%*%gamma||^2, a penalty
+## that grows with alpha and shrinks the deviation of gamma from col(D), so augmented
+## GBIC scores rank models within a single alpha. The refit uses the n original
+## observations and c_S parameters, while the combinatorial penalty uses eta0.
 refit_gbic <- function(S, X, y, D, eta0) {
   m <- nrow(D)
   n <- nrow(X)
